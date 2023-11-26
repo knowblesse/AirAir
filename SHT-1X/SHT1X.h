@@ -16,7 +16,6 @@ class SHT1X{
     bool _sendCommand(uint8_t command);
     uint16_t* _readData();
     bool _checkCRC(uint8_t command, uint8_t val1, uint8_t val2, uint8_t crc);
-    void _sda(int state);
 
 };
 #endif

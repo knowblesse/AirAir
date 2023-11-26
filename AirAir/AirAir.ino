@@ -4,10 +4,6 @@
 #endif
 U8X8_SSD1306_128X64_NONAME_HW_I2C u8x8(2);
 
-#include <SoftwareSerial.h>
-#define PIN_O2_TX 3
-#define PIN_O2_RX 4
-
 SoftwareSerial O2(PIN_O2_RX, PIN_O2_TX);
 
 void setup(void)

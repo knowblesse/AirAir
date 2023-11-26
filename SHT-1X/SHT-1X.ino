@@ -20,18 +20,17 @@ void loop()
   }
   Serial.println("  C");
   
+ Serial.print("Humd : ");
+ float humd = sht1x.readHumd();
+ if (sht1x.integrityHumd){
+   Serial.print(humd);
+ }
+ else{
+   Serial.print("err");
+ }
+ Serial.println("  %");
 
-//  Serial.print("Humd : ");
-//  float humd = sht1x.readHumd();
-//  if (sht1x.integrityHumd){
-//    Serial.print(humd);
-//  }
-//  else{
-//    Serial.print("err");
-//  }
-//  Serial.println("  %");
-//
-  delay(6000);
+  delay(1000);
 
   
 }

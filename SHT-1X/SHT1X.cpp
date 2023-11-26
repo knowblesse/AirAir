@@ -8,14 +8,8 @@ SHT1X::SHT1X(int PIN_SDA, int PIN_SCK){
 void SHT1X::initialize(){
   pinMode(_PIN_SCK, OUTPUT);
   digitalWrite(_PIN_SCK, LOW); // SCK start from LOW
-}
-
-void SHT1X::_sda(int state){
   pinMode(_PIN_SDA, OUTPUT);
-  delay(1);
-  digitalWrite(_PIN_SDA, state);
-  delay(1);
-  pinMode(_PIN_SDA, INPUT);
+  digitalWrite(_PIN_SDA, HIGH);
 }
 
 bool SHT1X::_sendCommand(uint8_t command){
@@ -47,7 +41,7 @@ bool SHT1X::_sendCommand(uint8_t command){
   return (ack1==0)&&(ack2==1);
 }
 
-uint16_t* SHT1X::_readData(){
+ uint16_t* SHT1X::_readData(){
   // Read first byte
   uint16_t value = 0;
   for(int i=0; i<8; i++){
@@ -57,16 +51,18 @@ uint16_t* SHT1X::_readData(){
     digitalWrite(_PIN_SCK, LOW);
     delay(1);
   }
-
+  
   // Send ACK
   //Serial.print("ACK1: ");
   //Serial.println(digitalRead(_PIN_SDA));
-  _sda(LOW);
+  pinMode(_PIN_SDA, OUTPUT);
+  digitalWrite(_PIN_SDA, LOW);
   delay(1);
   digitalWrite(_PIN_SCK, HIGH);
   delay(1);
   digitalWrite(_PIN_SCK, LOW);
   delay(1);
+  pinMode(_PIN_SDA, INPUT);
   
   // Read second byte
   for(int i=0; i<8; i++){
@@ -80,12 +76,14 @@ uint16_t* SHT1X::_readData(){
   // Send ACK
   //Serial.print("ACK2: ");
   //Serial.println(digitalRead(_PIN_SDA));
-  _sda(LOW);
+  pinMode(_PIN_SDA, OUTPUT);
+  digitalWrite(_PIN_SDA, LOW);
   delay(1);
   digitalWrite(_PIN_SCK, HIGH);
   delay(1);
   digitalWrite(_PIN_SCK, LOW);
   delay(1);
+  pinMode(_PIN_SDA, INPUT);
 
   // Read CRC
   uint16_t crc = 0;
@@ -100,14 +98,18 @@ uint16_t* SHT1X::_readData(){
   // Send ACK
   //Serial.print("ACK3: ");
   //Serial.println(digitalRead(_PIN_SDA));
-  _sda(LOW);
+  pinMode(_PIN_SDA, OUTPUT);
+  digitalWrite(_PIN_SDA, LOW);
   delay(1);
   digitalWrite(_PIN_SCK, HIGH);
   delay(1);
   digitalWrite(_PIN_SCK, LOW);
   delay(1);
+  pinMode(_PIN_SDA, INPUT);
 
-  static uint16_t output[2] = {value, crc};
+  static uint16_t output[2];
+  output[0] = value;
+  output[1] = crc;
   return output;
 }
 
@@ -139,6 +141,10 @@ float SHT1X::readTemp(){
   float temp = d1 + d2 * (float)value;
   
   // Check CRC result for temp
+  // Serial.println(command, HEX);
+  // Serial.println(value>>8, HEX);
+  // Serial.println(value & 0xFF, HEX);
+  // Serial.println(crc, HEX);
   bool crcResult = _checkCRC(command,value>>8, value & 0xFF, crc);
   integrityTemp = crcResult;
   
@@ -211,7 +217,8 @@ bool SHT1X::_checkCRC(uint8_t command, uint8_t val1, uint8_t val2, uint8_t crc){
 }
 
 void SHT1X::reset(){
-  _sda(HIGH);
+  pinMode(_PIN_SDA, OUTPUT);
+  digitalWrite(_PIN_SDA, HIGH);
   for(int i=0; i<10; i++){
     digitalWrite(_PIN_SCK, HIGH);
     delay(1);

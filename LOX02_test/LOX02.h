@@ -10,6 +10,8 @@ class LOX02{
     }; // Constructor
     bool initialize();
     double getO2();
+    double getO2P();
+    double getP();
   private:
     int _RX_PIN;
     int _TX_PIN;
