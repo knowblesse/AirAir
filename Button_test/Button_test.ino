@@ -13,14 +13,6 @@
 LOX02 lox(PIN_O2RX, PIN_O2TX);
 SHT1X sht1x(PIN_TEMP_SDA, PIN_TEMP_SCK);
 
-// Screen
-#include <U8x8lib.h>
-#ifdef U8X8_HAVE_HW_SPI
-#include <SPI.h>
-#endif
-U8X8_SSD1306_128X64_NONAME_HW_I2C u8x8(6);
-
-// ISR
 int fanState = 0;
 void ventilate(){
   fanState = 5;
@@ -32,55 +24,48 @@ void changeScreen(){
   //
 }
 
-void setup(void)
-{
-  // Pin Mode
+void setup(){
   pinMode(PIN_LBUTTON, INPUT_PULLUP);
   pinMode(PIN_BUZZER, OUTPUT);
   pinMode(PIN_FAN, OUTPUT);
-  lox.initialize();
+  Serial.begin(9600);
+  Serial.print("O2 Sensor State : ");
+  Serial.println(lox.initialize());
   sht1x.initialize();
   attachInterrupt(digitalPinToInterrupt(PIN_LBUTTON), ventilate, FALLING);
   attachInterrupt(digitalPinToInterrupt(PIN_RBUTTON), changeScreen, FALLING);
-
-  // Screen
-  u8x8.begin();
-  u8x8.setPowerSave(0);
-  u8x8.setFont(u8x8_font_7x14B_1x2_f);
 }
 
-void updateScreen(){
-  u8x8.drawString(0,0,"Temp :");
-  u8x8.drawString(0,2,"Humd :");
-  u8x8.drawString(0,4,"Prss :");
-  u8x8.drawString(0,6,"Oxyg :");
+void loop(){
 
-  // Temp
+  Serial.print("Pressure : ");
+  Serial.print(lox.getP());
+  Serial.print("ppm, O2 : ");
+  Serial.print(lox.getO2P());
+  Serial.print("ppm (");
+  Serial.print(lox.getO2());
+  Serial.println("%)");
+
+  Serial.print("Temp : ");
   float temp = sht1x.readTemp();
-  if(sht1x.integrityTemp){
-    u8x8.drawString(7,0,(String(temp)+"C").c_str());
+  if (sht1x.integrityTemp){
+    Serial.print(temp);
   }
   else{
-    u8x8.drawString(7,0,"Error!");
+    Serial.print("err");
   }
-
-  // Humd
+  Serial.println("  C");
+  
+  Serial.print("Humd : ");
   float humd = sht1x.readHumd();
   if (sht1x.integrityHumd){
-    u8x8.drawString(7,2,(String(humd)+"%").c_str());
+    Serial.print(humd);
   }
   else{
-    u8x8.drawString(7,2,"Error!");
+    Serial.print("err");
   }
-  
-  u8x8.drawString(7,4,String(lox.getP()).c_str());
-  u8x8.drawString(7,6,(String(lox.getO2())+"%").c_str());
-  u8x8.refreshDisplay();    // only required for SSD1606/7  
-}
+  Serial.println("  %");
 
-void loop(void)
-{
-  updateScreen();
 
   // Shutdown fan
   if(fanState > 0){
@@ -90,7 +75,4 @@ void loop(void)
     digitalWrite(PIN_FAN, LOW);
   }
   delay(1000);
-  // u8x8.setPowerSave(1);
-  // delay(1000);
-  
 }
