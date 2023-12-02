@@ -24,6 +24,7 @@ bool LOX02::initialize(){
 }
 
 double LOX02::getO2P(){
+  _O2.listen();
   while(!_O2.available()){
     _O2.print("O\r\n");
     delay(500);

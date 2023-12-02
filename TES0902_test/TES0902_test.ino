@@ -1,6 +1,6 @@
 #include "TES0902.h"
 
-TES0902 tes(14, 15);
+TES0902 tes(15, 14);
 
 void setup()
 {
@@ -11,5 +11,5 @@ void setup()
 void loop()
 {
   tes.readCO2();
-  delay(3000);
+  
 }

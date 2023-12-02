@@ -14,7 +14,7 @@ class TES0902{
   private:
     int _RX_PIN;
     int _TX_PIN;
-    bool _checkCRC(uint8_t *cmd, int cmd_length);
+    bool _checkCRC(uint8_t *cmd, int cmd_length, uint16_t crc);
     SoftwareSerial _CO2;
 
 };
