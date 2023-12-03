@@ -27,26 +27,39 @@ U8X8_SSD1306_128X64_NONAME_HW_I2C u8x8(8);
 // ISR
 int fanState = 0;
 void ventilate(){
-  fanState = 5;
+  fanState = 1;
   digitalWrite(PIN_FAN, HIGH);
 }
 
 bool screenOn = true;
 void changeScreen(){
-  //
+  screenOn = !screenOn;
+  u8x8.setPowerSave(screenOn);
 }
 
+String helloMsg[] = {
+    "Hi Nyang   ", 
+    "(^._.^)    ",
+    "Good Sleep?", 
+    "Miss you   ",
+    "From GOM   ",
+    "           "
+};
+// variables for CO2 warnings
+const int CO2_LIMIT = 1000;
+const unsigned long WARNTIME = 3600000UL;
+unsigned long lastWarning = -WARNTIME;
 void setup(void)
 {
   // Pin Mode
   pinMode(PIN_LBUTTON, INPUT_PULLUP);
+  pinMode(PIN_RBUTTON, INPUT_PULLUP);
   pinMode(PIN_BUZZER, OUTPUT);
   pinMode(PIN_FAN, OUTPUT);
   lox.initialize();
   sht1x.initialize();
   tes.initialize();
   attachInterrupt(digitalPinToInterrupt(PIN_LBUTTON), ventilate, FALLING);
-  attachInterrupt(digitalPinToInterrupt(PIN_RBUTTON), changeScreen, FALLING);
 
   // Screen
   u8x8.begin();
@@ -55,6 +68,9 @@ void setup(void)
   Serial.begin(9600);
 }
 
+String rotateString[] = {"\\", "|", "/", "|"};
+int currRotateState = 0;
+int currHelloMsg = 6;
 void updateScreen(){
   // Temp
   u8x8.setFont(u8x8_font_7x14B_1x2_f);
@@ -83,20 +99,72 @@ void updateScreen(){
   u8x8.drawString(1,2,(String(lox.getO2())+"%").c_str());
 
   // CO2 ppm
-  u8x8.drawString(8,2,"C");
+  u8x8.drawString(9,2,"C");
   int CO2_val = tes.readCO2();
   if (tes.integrityCO2){
-    u8x8.drawString(9,2,String(CO2_val).c_str());
+    if (CO2_val < 1000){
+      u8x8.drawString(10,2,(" " + String(CO2_val)+"p").c_str());  
+    }
+    else{
+      u8x8.drawString(10,2,(String(CO2_val)+"p").c_str());
+    }
   }
   else{
-    u8x8.drawString(10,2," err");
+    u8x8.drawString(10,2," err ");
   }
-  
-  //u8x8.drawString(12,6,"O ");
 
+  // Pressure
+  u8x8.drawString(0,4,"P");
+  double pressure = lox.getP();
+  if (pressure<1000){
+    u8x8.drawString(1,4,(" " + String((int)pressure)+"p").c_str());
+  }
+  else {
+    u8x8.drawString(1,4,(String((int)pressure)+"p").c_str());
+  }
 
-  //u8x8.drawString(1,4,String(lox.getP()).c_str());
-  
+  // O2 ppm
+  u8x8.drawString(9,4,"o");
+  double o2pressure = lox.getO2P();
+  if (o2pressure<1000){
+    u8x8.drawString(10,4,(" " + String((int)o2pressure)+"p").c_str());
+  }
+  else {
+    u8x8.drawString(10,4,(String((int)o2pressure)+"p").c_str());
+  }
+ 
+  // Show rotating mark
+  if(currRotateState == 3){
+    currRotateState = 0;
+  }
+  else{
+    currRotateState++;
+  }
+  u8x8.drawString(14, 6, rotateString[currRotateState].c_str());
+
+  // Show hello message
+  if(currHelloMsg < 6){
+    u8x8.drawString(0, 6, helloMsg[currHelloMsg].c_str());
+    currHelloMsg++;
+  }
+  else{
+    if(CO2_val > 1000){
+      u8x8.drawString(0, 6, "CO2 Warning");
+      if(screenOn && (millis()-lastWarning > WARNTIME)){
+        for(int j=0; j<3; j++){
+          digitalWrite(PIN_BUZZER, HIGH);
+          delay(200);
+          digitalWrite(PIN_BUZZER, LOW);
+          delay(200);
+        }
+        lastWarning = millis();
+      }
+    }
+    else{
+      u8x8.drawString(0, 6, "           ");
+    }
+  }
+
   u8x8.refreshDisplay();    // only required for SSD1606/7  
 }
 
@@ -111,8 +179,14 @@ void loop(void)
   else{
     digitalWrite(PIN_FAN, LOW);
   }
-  delay(1000);
-  // u8x8.setPowerSave(1);
-  // delay(1000);
-  
+
+  // Check screen button
+  if(digitalRead(PIN_RBUTTON) == LOW){
+    screenOn = !screenOn;
+    if(screenOn){ // show message when screen on is true
+      currHelloMsg = 0;
+    }
+    u8x8.setPowerSave(screenOn);
+  }
+  delay(500);
 }
