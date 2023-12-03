@@ -3,7 +3,7 @@
 bool LOX02::initialize(){
   _O2.begin(9600);
   delay(3000); // Too fast command cause errors.
-
+  _O2.listen();
   // Check connection
   int MAX_TRY = 5;
   int numTry = 0;
@@ -41,6 +41,7 @@ double LOX02::getO2P(){
 }
 
 double LOX02::getP(){
+  _O2.listen();
   while(!_O2.available()){
     _O2.print("P\r\n");
     delay(500);
@@ -57,6 +58,7 @@ double LOX02::getP(){
 }
 
 double LOX02::getO2(){
+  _O2.listen();
   while(!_O2.available()){
     _O2.print("%\r\n");
     delay(500);
