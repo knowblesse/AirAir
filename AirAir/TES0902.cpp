@@ -2,8 +2,9 @@
 
 void TES0902::initialize(){
   _CO2.begin(9600);
-  delay(1000);
   _CO2.listen();
+  pinMode(_RX_PIN, INPUT);
+  pinMode(_TX_PIN, OUTPUT);
 }
 int TES0902::_returnLastValue(){
   if(errorCount < MAX_ERRROR){
@@ -48,8 +49,8 @@ int TES0902::readCO2(){
   while( (_CO2.available() < FRAME_LENGTH) && (millis()-startTime < TIMEOUT)){
   }
   if(millis() - startTime >= TIMEOUT){
-    // Serial.println(_CO2.available());
-    // Serial.println("Timeout Error");
+    Serial.println(_CO2.available());
+    Serial.println("Timeout Error");
     return _returnLastValue();
   }
 
@@ -63,7 +64,7 @@ int TES0902::readCO2(){
   }
 
   if(!isInitialSeqMatched){
-    //Serial.println("Seq not match error");
+    Serial.println("Seq not match error");
     return _returnLastValue(); // if initial Seq was not matched, then skip the process.
   } 
 
@@ -80,10 +81,11 @@ int TES0902::readCO2(){
     integrityCO2 = true;
     errorCount = 0;
     lastCO2val = ((int)co2_msb)*256 + ((int)co2_lsb);
+    Serial.println(lastCO2val);
     return lastCO2val;
   }
   else {
-    //Serial.println("crc not match error");
+    Serial.println("crc not match error");
     return _returnLastValue();
   }
 }

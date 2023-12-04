@@ -2,8 +2,9 @@
 
 void TES0902::initialize(){
   _CO2.begin(9600);
-  delay(1000);
   _CO2.listen();
+  pinMode(_RX_PIN, INPUT);
+  pinMode(_TX_PIN, OUTPUT);
 }
 int TES0902::_returnLastValue(){
   if(errorCount < MAX_ERRROR){

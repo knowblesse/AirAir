@@ -2,8 +2,9 @@
 
 bool LOX02::initialize(){
   _O2.begin(9600);
-  delay(3000); // Too fast command cause errors.
   _O2.listen();
+  pinMode(_RX_PIN, INPUT);
+  pinMode(_TX_PIN, OUTPUT);
   // Check connection
   int MAX_TRY = 5;
   int numTry = 0;

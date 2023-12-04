@@ -7,7 +7,7 @@
 #define PIN_O2RX 4
 #define PIN_BUZZER 5
 #define PIN_CO2TX 7
-#define PIN_CO2RX 6
+#define PIN_CO2RX 14
 #define PIN_TEMP_SDA 16
 #define PIN_TEMP_SCK 17
 #define PIN_RBUTTON 9
@@ -46,7 +46,7 @@ String helloMsg[] = {
     "           "
 };
 // variables for CO2 warnings
-const int CO2_LIMIT = 1000;
+const int CO2_LIMIT = 1200;
 const unsigned long WARNTIME = 3600000UL;
 unsigned long lastWarning = -WARNTIME;
 void setup(void)
@@ -148,7 +148,7 @@ void updateScreen(){
     currHelloMsg++;
   }
   else{
-    if(CO2_val > 1000){
+    if(CO2_val > CO2_LIMIT){
       u8x8.drawString(0, 6, "CO2 Warning");
       if(screenOn && (millis()-lastWarning > WARNTIME)){
         for(int j=0; j<3; j++){
