@@ -31,13 +31,20 @@ void ventilate(){
   digitalWrite(PIN_FAN, HIGH);
 }
 
-bool screenOn = true;
-void changeScreen(){
-  screenOn = !screenOn;
-  u8x8.setPowerSave(screenOn);
-}
 
+// variables for CO2 warnings
+const int CO2_LIMIT = 1200;
+const unsigned long WARNTIME = 3600000UL;
+unsigned long lastWarning = -WARNTIME;
+volatile bool isBuzzerArmed = false;
+
+// Screen Variables
+bool screenOn = true;
+String rotateString[] = {"\\", "|", "/", "|"};
+int currRotateState = 0;
+int currHelloMsg = 7;
 String helloMsg[] = {
+    "           ",
     "Hi Nyang   ", 
     "(^._.^)    ",
     "Good Sleep?", 
@@ -45,10 +52,7 @@ String helloMsg[] = {
     "From GOM   ",
     "           "
 };
-// variables for CO2 warnings
-const int CO2_LIMIT = 1200;
-const unsigned long WARNTIME = 3600000UL;
-unsigned long lastWarning = -WARNTIME;
+
 void setup(void)
 {
   // Pin Mode
@@ -68,11 +72,10 @@ void setup(void)
   Serial.begin(9600);
 }
 
-String rotateString[] = {"\\", "|", "/", "|"};
-int currRotateState = 0;
-int currHelloMsg = 6;
 void updateScreen(){
-  // Temp
+  /*************************************/
+  /*           Temperature             */
+  /*************************************/
   u8x8.setFont(u8x8_font_7x14B_1x2_f);
   u8x8.drawString(0,0,"T");
   float temp = sht1x.readTemp();
@@ -83,7 +86,9 @@ void updateScreen(){
     u8x8.drawString(1,0,"Err  ºC");
   }
 
-  // Humd
+  /*************************************/
+  /*             Humidity              */
+  /*************************************/
   u8x8.drawString(9,0,"H");
   float humd = sht1x.readHumd();
   if (sht1x.integrityHumd){
@@ -93,12 +98,21 @@ void updateScreen(){
     u8x8.drawString(10,0,"Err  %");
   }
   
-  u8x8.setFont(u8x8_font_7x14B_1x2_f);
-  // O2 %
+  /*************************************/
+  /*            O2 Percent             */
+  /*************************************/
   u8x8.drawString(0,2,"O");
-  u8x8.drawString(1,2,(String(lox.getO2())+"%").c_str());
+  double O2percent = lox.getO2();
+  if(O2percent > 0){
+    u8x8.drawString(1,2,(String(O2percent)+"%").c_str());
+  }
+  else{
+    u8x8.drawString(1,2," err %");
+  }
 
-  // CO2 ppm
+  /*************************************/
+  /*              CO2 PPM              */
+  /*************************************/
   u8x8.drawString(9,2,"C");
   int CO2_val = tes.readCO2();
   if (tes.integrityCO2){
@@ -113,27 +127,39 @@ void updateScreen(){
     u8x8.drawString(10,2," err ");
   }
 
-  // Pressure
+  /*************************************/
+  /*             Pressure              */
+  /*************************************/
   u8x8.drawString(0,4,"P");
   double pressure = lox.getP();
-  if (pressure<1000){
+  if (pressure < 0){
+    u8x8.drawString(1,4," errp");
+  }
+  else if (pressure<1000){
     u8x8.drawString(1,4,(" " + String((int)pressure)+"p").c_str());
   }
   else {
     u8x8.drawString(1,4,(String((int)pressure)+"p").c_str());
   }
 
-  // O2 ppm
+  /*************************************/
+  /*               O2 PPM              */
+  /*************************************/
   u8x8.drawString(9,4,"o");
   double o2pressure = lox.getO2P();
-  if (o2pressure<1000){
+  if (o2pressure < 0){
+    u8x8.drawString(1,4," errp");
+  }
+  else if (o2pressure<1000){
     u8x8.drawString(10,4,(" " + String((int)o2pressure)+"p").c_str());
   }
   else {
     u8x8.drawString(10,4,(String((int)o2pressure)+"p").c_str());
   }
  
-  // Show rotating mark
+  /*************************************/
+  /*       Show Rotating Mark          */
+  /*************************************/
   if(currRotateState == 3){
     currRotateState = 0;
   }
@@ -142,15 +168,17 @@ void updateScreen(){
   }
   u8x8.drawString(14, 6, rotateString[currRotateState].c_str());
 
-  // Show hello message
-  if(currHelloMsg < 6){
+  /*************************************/
+  /*        Show Hello Message         */
+  /*************************************/
+  if(currHelloMsg < 7){
     u8x8.drawString(0, 6, helloMsg[currHelloMsg].c_str());
     currHelloMsg++;
   }
   else{
     if(CO2_val > CO2_LIMIT){
       u8x8.drawString(0, 6, "CO2 Warning");
-      if(screenOn && (millis()-lastWarning > WARNTIME)){
+      if(isBuzzerArmed && screenOn && (millis()-lastWarning > WARNTIME)){
         for(int j=0; j<3; j++){
           digitalWrite(PIN_BUZZER, HIGH);
           delay(200);
@@ -186,6 +214,7 @@ void loop(void)
     if(screenOn){ // show message when screen on is true
       currHelloMsg = 0;
     }
+    isBuzzerArmed = true;
     u8x8.setPowerSave(screenOn);
   }
   delay(500);
