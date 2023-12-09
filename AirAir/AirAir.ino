@@ -80,8 +80,8 @@ void updateScreen(){
   u8x8.drawString(0,0,"T");
   float temp = sht1x.readTemp();
   if(sht1x.integrityTemp){
-    u8x8.drawString(2,0,String(temp,1).c_str());
-    u8x8.drawString(5,0,176);
+    u8x8.drawString(1,0,String(temp,1).c_str());
+    u8x8.drawGlyph(5,0,176);
     u8x8.drawString(6,0,"C");
   }
   else{
@@ -96,7 +96,7 @@ void updateScreen(){
   u8x8.drawString(9,0,"H");
   float humd = sht1x.readHumd();
   if (sht1x.integrityHumd){
-    u8x8.drawString(10,0,(String(humd,1)+"%").c_str());
+    u8x8.drawString(10,0,(String(humd)+"%").c_str());
   }
   else{
     u8x8.drawString(10,0," err %");
