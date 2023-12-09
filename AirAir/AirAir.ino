@@ -215,7 +215,7 @@ void loop(void)
       currHelloMsg = 0;
     }
     isBuzzerArmed = true;
-    u8x8.setPowerSave(screenOn);
+    u8x8.setPowerSave(!screenOn);
   }
   delay(500);
 }
