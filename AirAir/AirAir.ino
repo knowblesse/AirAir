@@ -33,7 +33,7 @@ void ventilate(){
 
 
 // variables for CO2 warnings
-const int CO2_LIMIT = 1200;
+const int CO2_LIMIT = 2000;
 const unsigned long WARNTIME = 3600000UL;
 unsigned long lastWarning = -WARNTIME;
 volatile bool isBuzzerArmed = false;
@@ -44,13 +44,13 @@ String rotateString[] = {"\\", "|", "/", "|"};
 int currRotateState = 0;
 int currHelloMsg = 7;
 String helloMsg[] = {
-    "           ",
-    "Hi Nyang   ", 
-    "(^._.^)    ",
-    "Good Sleep?", 
-    "Miss you   ",
-    "From GOM   ",
-    "           "
+    "             ",
+    "Hi Nyang     ", 
+    "(=^._.^=)    ",
+    "Good Sleep?  ", 
+    "Miss you     ",
+    "From GOM     ",
+    "             "
 };
 
 void setup(void)
@@ -80,10 +80,14 @@ void updateScreen(){
   u8x8.drawString(0,0,"T");
   float temp = sht1x.readTemp();
   if(sht1x.integrityTemp){
-    u8x8.drawString(1,0,(String(temp)+"C").c_str());
+    u8x8.drawString(2,0,String(temp,1).c_str());
+    u8x8.drawString(5,0,176);
+    u8x8.drawString(6,0,"C");
   }
   else{
-    u8x8.drawString(1,0,"Err  ºC");
+    u8x8.drawString(1,0," err");
+    u8x8.drawString(5,0,176);
+    u8x8.drawString(6,0,"C");
   }
 
   /*************************************/
@@ -92,69 +96,70 @@ void updateScreen(){
   u8x8.drawString(9,0,"H");
   float humd = sht1x.readHumd();
   if (sht1x.integrityHumd){
-    u8x8.drawString(10,0,(String(humd)+"%").c_str());
+    u8x8.drawString(10,0,(String(humd,1)+"%").c_str());
   }
   else{
-    u8x8.drawString(10,0,"Err  %");
+    u8x8.drawString(10,0," err %");
   }
-  
+
+
+   /*************************************/
+  /*             Pressure              */
+  /*************************************/
+  u8x8.drawString(0,2,"P");
+  double pressure = lox.getP();
+  if (pressure < 0){
+    u8x8.drawString(2,2," err p");
+  }
+  else if (pressure<1000){
+    u8x8.drawString(2,2,(" " + String((int)pressure)+"p").c_str());
+  }
+  else {
+    u8x8.drawString(2,2,(String((int)pressure)+"p").c_str());
+  }
+
   /*************************************/
   /*            O2 Percent             */
   /*************************************/
-  u8x8.drawString(0,2,"O");
+  u8x8.drawString(9,2,"O");
   double O2percent = lox.getO2();
-  if(O2percent > 0){
-    u8x8.drawString(1,2,(String(O2percent)+"%").c_str());
+    if(O2percent > 0){
+    u8x8.drawString(10,2,(String(O2percent)+"%").c_str());
   }
   else{
-    u8x8.drawString(1,2," err %");
+    u8x8.drawString(10,2," err %");
   }
 
   /*************************************/
   /*              CO2 PPM              */
   /*************************************/
-  u8x8.drawString(9,2,"C");
+  u8x8.drawString(0,4,"C");
   int CO2_val = tes.readCO2();
   if (tes.integrityCO2){
     if (CO2_val < 1000){
-      u8x8.drawString(10,2,(" " + String(CO2_val)+"p").c_str());  
+      u8x8.drawString(2,4,(" " + String(CO2_val)+"p").c_str());  
     }
     else{
-      u8x8.drawString(10,2,(String(CO2_val)+"p").c_str());
+      u8x8.drawString(2,4,(String(CO2_val)+"p").c_str());
     }
   }
   else{
-    u8x8.drawString(10,2," err ");
-  }
-
-  /*************************************/
-  /*             Pressure              */
-  /*************************************/
-  u8x8.drawString(0,4,"P");
-  double pressure = lox.getP();
-  if (pressure < 0){
-    u8x8.drawString(1,4," errp");
-  }
-  else if (pressure<1000){
-    u8x8.drawString(1,4,(" " + String((int)pressure)+"p").c_str());
-  }
-  else {
-    u8x8.drawString(1,4,(String((int)pressure)+"p").c_str());
+    u8x8.drawString(2,4," err p");
   }
 
   /*************************************/
   /*               O2 PPM              */
   /*************************************/
-  u8x8.drawString(9,4,"o");
+  u8x8.drawString(9,4,"OP");
   double o2pressure = lox.getO2P();
   if (o2pressure < 0){
-    u8x8.drawString(1,4," errp");
+    u8x8.drawString(1,4," err p");
   }
   else if (o2pressure<1000){
-    u8x8.drawString(10,4,(" " + String((int)o2pressure)+"p").c_str());
+    u8x8.drawString(11,4,(" " + String((int)o2pressure)+"p").c_str());
   }
   else {
-    u8x8.drawString(10,4,(String((int)o2pressure)+"p").c_str());
+    u8x8.drawString(11,4,(String((int)o2pressure)+"p").c_str());
   }
  
   /*************************************/
@@ -177,7 +182,7 @@ void updateScreen(){
   }
   else{
     if(CO2_val > CO2_LIMIT){
-      u8x8.drawString(0, 6, "CO2 Warning");
+      u8x8.drawString(0, 6, "  !Ventilate!");
       if(isBuzzerArmed && screenOn && (millis()-lastWarning > WARNTIME)){
         for(int j=0; j<3; j++){
           digitalWrite(PIN_BUZZER, HIGH);
@@ -189,7 +194,7 @@ void updateScreen(){
       }
     }
     else{
-      u8x8.drawString(0, 6, "           ");
+      u8x8.drawString(0, 6, "             ");
     }
   }
 
