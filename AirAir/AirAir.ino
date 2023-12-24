@@ -25,10 +25,10 @@ TES0902 tes(PIN_CO2RX, PIN_CO2TX);
 U8X8_SSD1306_128X64_NONAME_HW_I2C u8x8(8);
 
 // ISR
-int fanState = 0;
+bool fanState = true;
 void ventilate(){
-  fanState = 1;
-  digitalWrite(PIN_FAN, HIGH);
+  fanState = !fanState;
+  digitalWrite(PIN_FAN, fanState);
 }
 
 
@@ -70,6 +70,9 @@ void setup(void)
   u8x8.setPowerSave(0);
 
   Serial.begin(9600);
+
+  // Fan
+  digitalWrite(PIN_FAN, fanState);
 }
 
 void updateScreen(){
@@ -204,14 +207,6 @@ void updateScreen(){
 void loop(void)
 {
   updateScreen();
-
-  // Shutdown fan
-  if(fanState > 0){
-    fanState--;
-  }
-  else{
-    digitalWrite(PIN_FAN, LOW);
-  }
 
   // Check screen button
   if(digitalRead(PIN_RBUTTON) == LOW){
