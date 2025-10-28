@@ -80,8 +80,8 @@ void updateScreen(){
   float temp = sht1x.readTemp();
   if(sht1x.integrityTemp){
     u8g2.drawStr(8,17,String(temp,1).c_str());
-    u8g2.drawGlyph(13*4+8,17,176);
-    u8g2.drawStr(13*5+3,17,"C");
+    u8g2.drawGlyph(13*4+6,17,176);
+    u8g2.drawStr(13*5,17,"C");
   }
   else{
     u8g2.drawStr(0,17," err");
@@ -108,7 +108,7 @@ void updateScreen(){
   int CO2_val = tes.readCO2();
   if (tes.integrityCO2){
     if (CO2_val < 1000){
-      u8g2.drawStr(8,64,(" " + String(CO2_val)+"  PPM").c_str());  
+      u8g2.drawStr(8,64,(String(CO2_val)+"  PPM").c_str());  
     }
     else{
       u8g2.drawStr(8,64,(String(CO2_val)+"  PPM").c_str());
@@ -138,7 +138,7 @@ void loop(void)
   updateScreen();
 
   // Check screen button
-  if(digitalRead(PIN_RBUTTON) == LOW){
+  if(digitalRead(PIN_LBUTTON) == LOW){
     screenOn = !screenOn;
     if(screenOn){ // show message when screen on is true
       currHelloMsg = 0;
